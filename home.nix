@@ -99,5 +99,40 @@ in
         };
       };
     };
+
+    yazi = {
+      enable = true;
+      enableFishIntegration = true;
+      
+      settings = {
+        mgr = {
+          show_hidden = true;
+        };
+
+        opener = {
+          edit = [
+            {
+              run = ''nvim "$@"'';
+              block = true;
+              orphan = false;
+              desc = "Edit with Neovim";
+            }
+          ];
+        };
+
+        open = {
+          rules = [
+            { mime = "text/*"; use = "edit"; }
+            { mime = "application/json"; use = "edit"; }
+            { mime = "application/x-yaml"; use = "edit"; }
+            { mime = "application/xml"; use = "edit"; }
+            { mime = "*/javascript"; use = "edit"; }
+            { mime = "*/typescript"; use = "edit"; }
+            { mime = "*/x-python"; use = "edit"; }
+            { mime = "*/x-shellscript"; use = "edit"; }
+          ];
+        };
+      };
+    };
   };
 }
