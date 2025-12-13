@@ -12,6 +12,8 @@ in
 
   home.packages = with pkgs; [
     neovim
+    bash-language-server
+    shfmt
     yazi
     eza
     tmux
@@ -61,91 +63,9 @@ in
   home.sessionVariables = {
     EDITOR = "nvim";
   };
-  xdg.configFile."fastfetch/config.jsonc".text = ''
-    {
-    "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
-    "logo": {
-      "type": "kitty-direct",
-      "source": "~/Extra/AdditionalVSCode/bg/rachel.png",
-      "width": 17,
-      "height": 10,
-      "padding": {
-         "top": 1,
-         "left": 2
-      }
-    },
-    "display": {
-        "separator": " "
-    },
-    "modules": [
-        {
-            "key": "╭───────────╮",
-            "type": "custom"
-        },
-        {
-            "key": "│ {#31} user    {#keys}│",
-            "type": "title",
-            "format": "{user-name}"
-        },
-        {
-            "key": "│ {#32}󰇅 hname   {#keys}│",
-            "type": "title",
-            "format": "{host-name}"
-        },
-        {
-            "key": "│ {#33}󰅐 uptime  {#keys}│",
-            "type": "uptime"
-        },
-        {
-            "key": "│ {#34}{icon} distro  {#keys}│",
-            "type": "os"
-        },
-        {
-            "key": "│ {#35} kernel  {#keys}│",
-            "type": "kernel"
-        },
-        {
-            "key": "│ {#36}󰇄 desktop {#keys}│",
-            "type": "de"
-        },
-        {
-            "key": "│ {#31} term    {#keys}│",
-            "type": "terminal"
-        },
-        {
-            "key": "│ {#32} shell   {#keys}│",
-            "type": "shell"
-        },
-        {
-            "key": "│ {#33}󰍛 cpu     {#keys}│",
-            "type": "cpu",
-            "showPeCoreCount": true
-        },
-        {
-            "key": "│ {#34}󰉉 disk    {#keys}│",
-            "type": "disk",
-            "folders": "/"
-        },
-        {
-            "key": "│ {#35} memory  {#keys}│",
-            "type": "memory"
-        },
-        {
-            "key": "├───────────┤",
-            "type": "custom"
-        },
-        {
-            "key": "│ {#39} colors  {#keys}│",
-            "type": "colors",
-            "symbol": "circle"
-        },
-        {
-            "key": "╰───────────╯",
-            "type": "custom"
-        }
-    ]
-}
-  '';
+
+  xdg.configFile."fastfetch/config.jsonc".source = ./fastfetch/config.jsonc;
+  xdg.configFile."nvim/init.lua".source = ./nvim/init.lua;
   # Let Home Manager install and manage itself.
   programs = {
     home-manager.enable = true;
@@ -219,6 +139,10 @@ in
           ];
         };
       };
+    };
+
+    vim = {
+      enable = true;
     };
   };
 }
