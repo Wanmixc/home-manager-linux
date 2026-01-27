@@ -1,13 +1,54 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 let
   secrets = builtins.fromJSON (builtins.readFile ./secrets.json);
+  basePath = ./opencode/opencode.base.json;
+
+  baseConfig =
+    if builtins.pathExists basePath then
+      builtins.fromJSON (builtins.readFile basePath)
+    else
+      {
+        "$schema" = "https://opencode.ai/config.json";
+        plugin = [ "opencode-openai-codex-auth" ];
+      };
+
+  extraConfig = {
+    plugin = lib.unique ((baseConfig.plugin or []) ++ [ "opencode-openai-codex-auth" ]);
+
+    agent = (baseConfig.agent or {}) // {
+      "just-chat" = {
+        mode = "primary";
+        description = "Chat-only: jawab langsung, nggak ngulang pertanyaan, minim step, tanpa tool.";
+
+        temperature = 0.25;
+        maxSteps = 1;
+
+        prompt = "{file:./prompts/just-chat.txt}";
+
+        tools = {
+          write = false;
+          edit = false;
+          patch = false;
+          bash = false;
+          webfetch = false;
+        };
+
+        permission = {
+          edit = "deny";
+          bash = "deny";
+          webfetch = "deny";
+        };
+      };
+    };
+  };
+
+  merged = lib.recursiveUpdate baseConfig extraConfig;
 in
 {
-  # Home Manager needs a bit of information about you and the paths it should
-  # manage.
+  nixpkgs.config.allowUnfree = true;
+
   home.username = "wanmixc";
   home.homeDirectory = "/home/wanmixc";
-
   home.stateVersion = "25.11"; # Please read the comment before changing.
 
   home.packages = with pkgs; [
@@ -26,6 +67,9 @@ in
     direnv
     zoxide
     fastfetch
+    microsoft-edge
+    opencode
+    bun
   ];
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
@@ -64,6 +108,20 @@ in
     EDITOR = "nvim";
   };
 
+  xdg.configFile."opencode/opencode.json".text = builtins.toJSON merged;
+
+  xdg.configFile."opencode/prompts/just-chat.txt".text = ''
+    Kamu adalah agent chat-only.
+
+    Gaya:
+    - Jangan mengulang/parafrase pertanyaan user di awal jawaban.
+    - Jawab langsung dan ringkas. Utamakan langkah praktis.
+    - Kalau butuh info tambahan, tanya maksimal 1 pertanyaan klarifikasi.
+    - Bahasa Indonesia santai.
+
+    Jika user minta kode:
+    - Berikan kodenya langsung + penjelasan singkat (1–3 bullet).
+  '';
   xdg.configFile."fastfetch/config.jsonc".source = ./fastfetch/config.jsonc;
   xdg.configFile."nvim/init.lua".source = ./nvim/init.lua;
   # Let Home Manager install and manage itself.
