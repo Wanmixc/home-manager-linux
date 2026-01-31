@@ -43,9 +43,22 @@ let
   };
 
   merged = lib.recursiveUpdate baseConfig extraConfig;
+  bunVersion = "1.3.6";
 in
 {
   nixpkgs.config.allowUnfree = true;
+
+  nixpkgs.overlays = [
+    (final: prev: {
+      bun = prev.bun.overrideAttrs (old: rec {
+        version = bunVersion;
+        src = prev.fetchurl {
+          url = "https://github.com/oven-sh/bun/releases/download/bun-v${version}/bun-linux-x64.zip";
+          sha256 = "1vqidhf94196ynwc333y4v5vfx4fqkss88svhy86c3am6hhqvacv";
+        };
+      });
+    })
+  ];
 
   home.username = "wanmixc";
   home.homeDirectory = "/home/wanmixc";
@@ -109,19 +122,7 @@ in
   };
 
   xdg.configFile."opencode/opencode.json".text = builtins.toJSON merged;
-
-  xdg.configFile."opencode/prompts/just-chat.txt".text = ''
-    Kamu adalah agent chat-only.
-
-    Gaya:
-    - Jangan mengulang/parafrase pertanyaan user di awal jawaban.
-    - Jawab langsung dan ringkas. Utamakan langkah praktis.
-    - Kalau butuh info tambahan, tanya maksimal 1 pertanyaan klarifikasi.
-    - Bahasa Indonesia santai.
-
-    Jika user minta kode:
-    - Berikan kodenya langsung + penjelasan singkat (1–3 bullet).
-  '';
+  xdg.configFile."opencode/prompts/just-chat.txt".source = ./opencode_config/just-chat.txt;
   xdg.configFile."fastfetch/config.jsonc".source = ./fastfetch/config.jsonc;
   xdg.configFile."nvim/init.lua".source = ./nvim/init.lua;
   # Let Home Manager install and manage itself.
