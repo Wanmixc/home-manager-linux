@@ -43,20 +43,43 @@ let
   };
 
   merged = lib.recursiveUpdate baseConfig extraConfig;
-  bunVersion = "1.3.6";
 in
 {
   nixpkgs.config.allowUnfree = true;
 
   nixpkgs.overlays = [
     (final: prev: {
-      bun = prev.bun.overrideAttrs (old: rec {
-        version = bunVersion;
+      codex = prev.stdenvNoCC.mkDerivation {
+        pname = "codex";
+        version = "0.112.0";
+
         src = prev.fetchurl {
-          url = "https://github.com/oven-sh/bun/releases/download/bun-v${version}/bun-linux-x64.zip";
-          sha256 = "1vqidhf94196ynwc333y4v5vfx4fqkss88svhy86c3am6hhqvacv";
+          url = "https://github.com/openai/codex/releases/download/rust-v0.112.0/codex-x86_64-unknown-linux-musl.tar.gz";
+          sha256 = "sha256-8riPhKgOfFt90k5TCP830IL0ryMRH0igaIyvdCIuwxQ=";
         };
-      });
+
+        nativeBuildInputs = [
+          prev.autoPatchelfHook
+          prev.gnutar
+        ];
+
+        buildInputs = [
+          prev.stdenv.cc.cc.lib
+        ];
+
+        dontConfigure = true;
+        dontBuild = true;
+
+        unpackPhase = ''
+          tar -xzf $src
+        '';
+
+        installPhase = ''
+          mkdir -p $out/bin
+          cp codex-x86_64-unknown-linux-musl $out/bin/codex
+          chmod +x $out/bin/codex
+        '';
+      };
     })
   ];
 
@@ -83,6 +106,7 @@ in
     microsoft-edge
     opencode
     bun
+    codex
   ];
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
