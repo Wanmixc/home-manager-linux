@@ -1,3 +1,9 @@
+1. create secrets.json like this
+{
+  "github_token": "your github token",
+  "gitlab_token": "your gitlab token"
+}
+
 # Home Manager Linux
 
 Personal [Home Manager](https://nix-community.github.io/home-manager/) configuration for Linux, managed with [Nix](https://nixos.org/).
