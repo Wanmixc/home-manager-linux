@@ -23,7 +23,7 @@ This repository declaratively defines the user environment — installed package
 | **File Manager** | Yazi (with Neovim integration and Fish shell support) |
 | **Git** | Git with [delta](https://github.com/dandavison/delta) (side-by-side diffs), GitUI |
 | **Search & Utilities** | Ripgrep, Bat, Eza, Unzip, Fastfetch |
-| **AI Tools** | [OpenCode](https://opencode.ai/), [Codex CLI](https://github.com/openai/codex) |
+| **AI Tools** | [Codex CLI](https://github.com/openai/codex) |
 | **Browser** | Microsoft Edge |
 | **Runtime** | Bun |
 
@@ -36,8 +36,6 @@ This repository declaratively defines the user environment — installed package
 │   └── init.lua          # Neovim configuration
 ├── fastfetch/
 │   └── config.jsonc      # Fastfetch system info display config
-├── opencode_config/
-│   └── just-chat.txt     # Custom prompt for OpenCode chat agent
 ├── secrets.json          # (git-ignored) GitHub/GitLab tokens
 └── README.md
 ```
@@ -78,4 +76,3 @@ This repository declaratively defines the user environment — installed package
 - **Yazi** — Opens text files in Neovim by default; hidden files are shown.
 - **Direnv** — Enabled for per-directory environment management.
 - **Codex CLI** — Packaged as a custom Nix overlay fetched from the official GitHub release.
-- **OpenCode** — Includes a custom "just-chat" agent with a minimal, chat-only prompt.
