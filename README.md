@@ -9,8 +9,7 @@ This repository declaratively defines the user environment — installed package
 >
 > ```json
 > {
->   "github_token": "your github token",
->   "gitlab_token": "your gitlab token"
+>   "github_token": "your github token"
 > }
 > ```
 
