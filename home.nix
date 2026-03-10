@@ -1,67 +1,6 @@
 { config, pkgs, lib, ... }:
 let
   secrets = builtins.fromJSON (builtins.readFile ./secrets.json);
-  basePath = ./opencode/opencode.base.json;
-
-  baseConfig =
-    if builtins.pathExists basePath then
-      builtins.fromJSON (builtins.readFile basePath)
-    else
-      {
-        "$schema" = "https://opencode.ai/config.json";
-        plugin = [ "opencode-openai-codex-auth" ];
-      };
-
-  extraConfig = {
-    plugin = lib.unique ((baseConfig.plugin or []) ++ [ "opencode-openai-codex-auth" ]);
-
-    agent = (baseConfig.agent or {}) // {
-      "just-chat" = {
-        mode = "primary";
-        description = "Chat-only: jawab langsung, nggak ngulang pertanyaan, minim step, tanpa tool.";
-
-        temperature = 0.25;
-        maxSteps = 1;
-
-        prompt = ''
-              Kamu adalah agent chat-only.
-
-              ATURAN WAJIB (strict):
-              1) Jawab HANYA pertanyaan user yang paling terakhir.
-              2) Jangan mengulang, merangkum, atau membahas jawaban/pertanyaan sebelumnya kecuali user secara eksplisit minta "bandingkan", "ulang", atau "ringkas lagi".
-              3) Jangan menambahkan topik lain (mis. tuple) kalau user tidak minta.
-              4) Jangan memulai dengan mengulang/parafrase pertanyaan user.
-              5) Output ringkas: maksimal 6 bullet ATAU 1 paragraf pendek + 1 contoh kode (kalau relevan).
-              6) Kalau konteksnya ambigu, tanya 1 pertanyaan klarifikasi saja. Kalau tidak ambigu, langsung jawab.
-
-              Gaya:
-              - Bahasa Indonesia santai.
-              - Tidak pakai filler ("Baik", "Tentu") di awal.
-
-              Format untuk definisi:
-              - 1 kalimat definisi
-              - 2–4 bullet poin penting
-              - 1 contoh singkat (opsional)
-            '';
-
-        tools = {
-          write = false;
-          edit = false;
-          patch = false;
-          bash = false;
-          webfetch = false;
-        };
-
-        permission = {
-          edit = "deny";
-          bash = "deny";
-          webfetch = "deny";
-        };
-      };
-    };
-  };
-
-  merged = lib.recursiveUpdate baseConfig extraConfig;
 in
 {
   nixpkgs.config.allowUnfree = true;
@@ -123,7 +62,6 @@ in
     zoxide
     fastfetch
     microsoft-edge
-    opencode
     bun
     codex
   ];
@@ -164,7 +102,6 @@ in
     EDITOR = "nvim";
   };
 
-  xdg.configFile."opencode/opencode.json".text = builtins.toJSON merged;
   xdg.configFile."fastfetch/config.jsonc".source = ./fastfetch/config.jsonc;
   xdg.configFile."nvim/init.lua".source = ./nvim/init.lua;
   # Let Home Manager install and manage itself.
