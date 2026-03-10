@@ -1,14 +1,18 @@
-1. create secrets.json like this
-{
-  "github_token": "your github token",
-  "gitlab_token": "your gitlab token"
-}
-
 # Home Manager Linux
 
 Personal [Home Manager](https://nix-community.github.io/home-manager/) configuration for Linux, managed with [Nix](https://nixos.org/).
 
 This repository declaratively defines the user environment — installed packages, dotfiles, shell settings, and program configurations — so everything can be reproduced on any Linux machine with Nix.
+
+> [!IMPORTANT]
+> Before running `home-manager switch`, create a `secrets.json` file in the repository root:
+>
+> ```json
+> {
+>   "github_token": "your github token",
+>   "gitlab_token": "your gitlab token"
+> }
+> ```
 
 ## What's Included
 
