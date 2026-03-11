@@ -28,14 +28,16 @@ This repository declaratively defines the user environment — installed package
 
 ## Repository Structure
 
-```
+```text
 .
-├── home.nix              # Main Home Manager configuration
-├── nvim/
-│   └── init.lua          # Neovim configuration
+├── home.nix              # Main Home Manager configuration and module imports
 ├── fastfetch/
 │   └── config.jsonc      # Fastfetch system info display config
-├── secrets.json          # (git-ignored) GitHub/GitLab tokens
+├── nvim/
+│   └── init.lua          # Neovim configuration
+├── tmux/
+│   └── tmux.nix          # Tmux Home Manager module
+├── secrets.json          # (git-ignored) GitHub token
 └── README.md
 ```
 
@@ -73,4 +75,5 @@ This repository declaratively defines the user environment — installed package
 - **Git** — Configured with `delta` for side-by-side diffs, automatic remote setup on push, and private repo access via tokens from `secrets.json`.
 - **Yazi** — Opens text files in Neovim by default; hidden files are shown.
 - **Direnv** — Enabled for per-directory environment management.
+- **Tmux** — Modularized into `tmux/tmux.nix` with Catppuccin-inspired status bar, quick split bindings, and `Alt-h/j/k/l` pane navigation.
 - **Codex CLI** — Packaged as a custom Nix overlay fetched from the official GitHub release.
