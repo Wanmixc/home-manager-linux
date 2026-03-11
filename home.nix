@@ -3,6 +3,10 @@ let
   secrets = builtins.fromJSON (builtins.readFile ./secrets.json);
 in
 {
+  imports = [
+    ./tmux/tmux.nix
+  ];
+
   nixpkgs.config.allowUnfree = true;
 
   nixpkgs.overlays = [
