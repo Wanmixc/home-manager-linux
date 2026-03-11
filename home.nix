@@ -86,6 +86,7 @@ in
   xdg.configFile = {
     "fastfetch/config.jsonc".source = ./fastfetch/config.jsonc;
     "nvim/init.lua".source = ./nvim/init.lua;
+    "rmpc/themes/theme.ron".source = ./rmpc/theme.ron;
   };
 
   # Programs
