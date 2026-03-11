@@ -19,6 +19,7 @@ This repository declaratively defines the user environment — installed package
 |---|---|
 | **Editor** | Neovim (custom `nvim/init.lua`), Vim |
 | **Shell & Terminal** | Tmux, Zoxide, Direnv, Bash Language Server, ShFmt |
+| **Music** | MPD user service + `rmpc` terminal client (`rmpc/config.ron`) |
 | **File Manager** | Yazi (with Neovim integration and Fish shell support) |
 | **Git** | Git with [delta](https://github.com/dandavison/delta) (side-by-side diffs), GitUI |
 | **Search & Utilities** | Ripgrep, Bat, Eza, Unzip, Fastfetch |
@@ -35,6 +36,8 @@ This repository declaratively defines the user environment — installed package
 │   └── config.jsonc      # Fastfetch system info display config
 ├── nvim/
 │   └── init.lua          # Neovim configuration
+├── rmpc/
+│   └── config.ron        # rmpc layout, keybinds, and MPD client config
 ├── tmux/
 │   └── tmux.nix          # Tmux Home Manager module
 ├── secrets.json          # (git-ignored) GitHub token
@@ -75,5 +78,6 @@ This repository declaratively defines the user environment — installed package
 - **Git** — Configured with `delta` for side-by-side diffs, automatic remote setup on push, and private repo access via tokens from `secrets.json`.
 - **Yazi** — Opens text files in Neovim by default; hidden files are shown.
 - **Direnv** — Enabled for per-directory environment management.
-- **Tmux** — Modularized into `tmux/tmux.nix` with Catppuccin-inspired status bar, quick split bindings, and `Alt-h/j/k/l` pane navigation.
+- **rmpc + MPD** — MPD runs as a Home Manager user service with socket activation, and `rmpc` is configured from `rmpc/config.ron` with a custom multi-pane layout.
+- **Tmux** — Modularized into `tmux/tmux.nix` with quick split bindings, `Alt-h/j/k/l` pane navigation, and a status bar styled to match the local terminal palette.
 - **Codex CLI** — Packaged as a custom Nix overlay fetched from the official GitHub release.

@@ -3,12 +3,13 @@ let
   secrets = builtins.fromJSON (builtins.readFile ./secrets.json);
 in
 {
+  # Modules
   imports = [
     ./tmux/tmux.nix
   ];
 
+  # Nixpkgs
   nixpkgs.config.allowUnfree = true;
-
   nixpkgs.overlays = [
     (final: prev: {
       codex = prev.stdenvNoCC.mkDerivation {
@@ -45,74 +46,53 @@ in
     })
   ];
 
+  # Home metadata
   home.username = "wanmixc";
   home.homeDirectory = "/home/wanmixc";
-  home.stateVersion = "25.11"; # Please read the comment before changing.
+  home.stateVersion = "25.11";
 
+  # Packages
   home.packages = with pkgs; [
-    neovim
     bash-language-server
-    shfmt
-    yazi
-    eza
-    tmux
-    sxiv
-    git
-    unzip
     bat
-    ripgrep
-    gitui
-    direnv
-    zoxide
-    fastfetch
-    microsoft-edge
     bun
     codex
+    direnv
+    eza
+    fastfetch
+    gitui
+    microsoft-edge
+    neovim
+    ripgrep
+    shfmt
+    sxiv
+    tmux
+    unzip
+    yazi
+    zoxide
   ];
 
-  # Home Manager is pretty good at managing dotfiles. The primary way to manage
-  # plain files is through 'home.file'.
-  home.file = {
-    # # Building this configuration will create a copy of 'dotfiles/screenrc' in
-    # # the Nix store. Activating the configuration will then make '~/.screenrc' a
-    # # symlink to the Nix store copy.
-    # ".screenrc".source = dotfiles/screenrc;
-
-    # # You can also set the file content immediately.
-    # ".gradle/gradle.properties".text = ''
-    #   org.gradle.console=verbose
-    #   org.gradle.daemon.idletimeout=3600000
-    # '';
-  };
-
-  # Home Manager can also manage your environment variables through
-  # 'home.sessionVariables'. These will be explicitly sourced when using a
-  # shell provided by Home Manager. If you don't want to manage your shell
-  # through Home Manager then you have to manually source 'hm-session-vars.sh'
-  # located at either
-  #
-  #  ~/.nix-profile/etc/profile.d/hm-session-vars.sh
-  #
-  # or
-  #
-  #  ~/.local/state/nix/profiles/profile/etc/profile.d/hm-session-vars.sh
-  #
-  # or
-  #
-  #  /etc/profiles/per-user/wanmixc/etc/profile.d/hm-session-vars.sh
-  #
-
+  # Session
   home.sessionVariables = {
     EDITOR = "nvim";
   };
 
-  xdg.configFile."fastfetch/config.jsonc".source = ./fastfetch/config.jsonc;
-  xdg.configFile."nvim/init.lua".source = ./nvim/init.lua;
-  # Let Home Manager install and manage itself.
+  # XDG
+  xdg.userDirs = {
+    enable = true;
+    createDirectories = true;
+  };
+
+  xdg.configFile = {
+    "fastfetch/config.jsonc".source = ./fastfetch/config.jsonc;
+    "nvim/init.lua".source = ./nvim/init.lua;
+  };
+
+  # Programs
   programs = {
     home-manager.enable = true;
-    
     direnv.enable = true;
+    vim.enable = true;
 
     git = {
       enable = true;
@@ -146,6 +126,11 @@ in
           colorMoved = "default";
         };
       };
+    };
+
+    rmpc = {
+      enable = true;
+      config = builtins.readFile ./rmpc/config.ron;
     };
 
     yazi = {
@@ -182,9 +167,23 @@ in
         };
       };
     };
+  };
 
-    vim = {
-      enable = true;
-    };
+  # Services
+  services.mpd = {
+    enable = true;
+    musicDirectory = config.xdg.userDirs.music;
+    network.startWhenNeeded = true;
+    extraConfig = ''
+      auto_update "yes"
+      restore_paused "yes"
+      follow_outside_symlinks "yes"
+      follow_inside_symlinks "yes"
+
+      audio_output {
+        type "pulse"
+        name "PulseAudio / PipeWire"
+      }
+    '';
   };
 }

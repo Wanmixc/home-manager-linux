@@ -40,20 +40,20 @@
       bind -r K resize-pane -U 5
       bind -r L resize-pane -R 5
 
-      set -g status-style "bg=#1e1e2e,fg=#cdd6f4"
-      set -g message-style "bg=#89b4fa,fg=#1e1e2e"
-      set -g message-command-style "bg=#89b4fa,fg=#1e1e2e"
-      set -g pane-border-style "fg=#45475a"
-      set -g pane-active-border-style "fg=#89b4fa"
+      set -g status-style "bg=#251d27,fg=#d5c0d7"
+      set -g message-style "bg=#afc2fc,fg=#251d27"
+      set -g message-command-style "bg=#afc2fc,fg=#251d27"
+      set -g pane-border-style "fg=#514254"
+      set -g pane-active-border-style "fg=#afc2fc"
 
       set -g status-left-length 30
       set -g status-right-length 100
-      set -g status-left "#[fg=#1e1e2e,bg=#89b4fa,bold] #S #[fg=#89b4fa,bg=#1e1e2e]█#[default]"
-      set -g status-right "#[fg=#a6e3a1]#(whoami) #[fg=#6c7086]| #[fg=#94e2d5]%a %d %b #[fg=#f9e2af]%H:%M "
+      set -g status-left "#[fg=#251d27,bg=#afc2fc,bold] #S #[fg=#afc2fc,bg=#251d27]█#[default]"
+      set -g status-right "#[fg=#8fc9fc]#(whoami) #[fg=#9d8ba0]| #[fg=#eddeec]%a %d %b #[fg=#fcb38a]%H:%M "
 
-      setw -g window-status-format "#[fg=#bac2de,bg=#313244] #I:#W "
-      setw -g window-status-current-format "#[fg=#1e1e2e,bg=#a6e3a1,bold] #I:#W "
-      setw -g window-status-style "fg=#bac2de,bg=#313244"
+      setw -g window-status-format "#[fg=#d5c0d7,bg=#2d252f] #I:#W "
+      setw -g window-status-current-format "#[fg=#251d27,bg=#afc2fc,bold] #I:#W "
+      setw -g window-status-style "fg=#d5c0d7,bg=#2d252f"
     '';
   };
 }
