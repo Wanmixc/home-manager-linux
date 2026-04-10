@@ -38,6 +38,8 @@ This repository declaratively defines the user environment — installed package
 │   └── init.lua          # Neovim configuration
 ├── rmpc/
 │   └── config.ron        # rmpc layout, keybinds, and MPD client config
+├── codex/
+│   └── skills/           # Codex skills managed by Home Manager
 ├── tmux/
 │   └── tmux.nix          # Tmux Home Manager module
 ├── secrets.json          # (git-ignored) GitHub token
@@ -81,3 +83,4 @@ This repository declaratively defines the user environment — installed package
 - **rmpc + MPD** — MPD runs as a Home Manager user service with socket activation, and `rmpc` is configured from `rmpc/config.ron` with a custom multi-pane layout.
 - **Tmux** — Modularized into `tmux/tmux.nix` with quick split bindings, `Alt-h/j/k/l` pane navigation, and a status bar styled to match the local terminal palette.
 - **Codex CLI** — Packaged as a custom Nix overlay fetched from the official GitHub release.
+- **Codex Skills** — Installs the `commit-message-id` skill into `~/.codex/skills` via Home Manager activation so Codex can use the Indonesian commit message guideline.

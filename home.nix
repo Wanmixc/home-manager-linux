@@ -117,6 +117,13 @@ args = [
 EOF
   '';
 
+  home.activation.codexCommitMessageSkill = lib.hm.dag.entryAfter ["linkGeneration"] ''
+    install -Dm644 ${./codex/skills/commit-message-id/SKILL.md} \
+      "$HOME/.codex/skills/commit-message-id/SKILL.md"
+    install -Dm644 ${./codex/skills/commit-message-id/agents/openai.yaml} \
+      "$HOME/.codex/skills/commit-message-id/agents/openai.yaml"
+  '';
+
   # Programs
   programs = {
     home-manager.enable = true;

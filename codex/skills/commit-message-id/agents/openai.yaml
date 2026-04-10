@@ -1,0 +1,4 @@
+interface:
+  display_name: "Commit Message ID"
+  short_description: "Write Indonesian Conventional Commit messages"
+  default_prompt: "Buatkan commit message menggunakan guideline commit-message-id."
