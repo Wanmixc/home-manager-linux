@@ -89,6 +89,34 @@ in
     "rmpc/themes/theme.ron".source = ./rmpc/theme.ron;
   };
 
+  home.activation.codexChromeDevtoolsMcp = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    CODex_CONFIG="$HOME/.codex/config.toml"
+    mkdir -p "$HOME/.codex"
+
+    if [ -f "$CODex_CONFIG" ]; then
+      if grep -q '^\[mcp_servers\.chrome-devtools\]$' "$CODex_CONFIG"; then
+        ${pkgs.gawk}/bin/awk '
+          BEGIN { skip = 0 }
+          /^\[mcp_servers\.chrome-devtools\]$/ { skip = 1; next }
+          /^\[/ && skip { skip = 0 }
+          !skip { print }
+        ' "$CODex_CONFIG" > "$CODex_CONFIG.tmp"
+        mv "$CODex_CONFIG.tmp" "$CODex_CONFIG"
+      fi
+    fi
+
+    cat >> "$CODex_CONFIG" <<'EOF'
+
+[mcp_servers.chrome-devtools]
+command = "bunx"
+args = [
+  "chrome-devtools-mcp@latest",
+  "--executablePath",
+  "/home/wanmixc/.nix-profile/bin/microsoft-edge",
+]
+EOF
+  '';
+
   # Programs
   programs = {
     home-manager.enable = true;
