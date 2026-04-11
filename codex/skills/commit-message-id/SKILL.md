@@ -167,9 +167,3 @@ revert: feat(auth): add passkey login
 
 This reverts commit abc1234.
 ```
-
-## Source
-
-Guideline ini dibuat dari:
-
-https://gist.githubusercontent.com/nyancodeid/63f19941c81252bb0cca9c14497cf9f7/raw/2ca6ca05d4d7c719bfe317e923bfeb3a269e526b/commit-message-id.md
