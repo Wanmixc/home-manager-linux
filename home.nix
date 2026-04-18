@@ -14,11 +14,11 @@ in
     (final: prev: {
       codex = prev.stdenvNoCC.mkDerivation {
         pname = "codex";
-        version = "0.112.0";
+        version = "0.121.0";
 
         src = prev.fetchurl {
-          url = "https://github.com/openai/codex/releases/download/rust-v0.112.0/codex-x86_64-unknown-linux-musl.tar.gz";
-          sha256 = "sha256-8riPhKgOfFt90k5TCP830IL0ryMRH0igaIyvdCIuwxQ=";
+          url = "https://github.com/openai/codex/releases/download/rust-v0.121.0/codex-x86_64-unknown-linux-musl.tar.gz";
+          sha256 = "sha256-J4xysD1OH2YbqCjBzPNuui+I2AdMcOPwMhHb+2MSc8Q=";
         };
 
         nativeBuildInputs = [
