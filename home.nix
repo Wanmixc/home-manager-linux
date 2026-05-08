@@ -104,6 +104,12 @@ in
     "starship.toml".source = ./starship/starship.toml;
   };
 
+  # DeepSeek skills managed declaratively via Home Manager
+  home.file = {
+    ".deepseek/skills/commit-message-id/SKILL.md".source = ./deepseek/skills/commit-message-id/SKILL.md;
+    ".deepseek/skills/skill-creator/SKILL.md".source = ./deepseek/skills/skill-creator/SKILL.md;
+  };
+
   home.activation.codexChromeDevtoolsMcp = lib.hm.dag.entryAfter ["writeBoundary"] ''
     CODex_CONFIG="$HOME/.codex/config.toml"
     mkdir -p "$HOME/.codex"
