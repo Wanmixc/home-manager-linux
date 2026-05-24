@@ -51,6 +51,7 @@ in
   # Modules
   imports = [
     ./tmux/tmux.nix
+    (import ./nvim/default.nix)
   ];
 
   # Nixpkgs
@@ -69,7 +70,6 @@ in
     eza
     fastfetch
     gitui
-    neovim
     ripgrep
     shfmt
     sxiv
@@ -79,9 +79,15 @@ in
     deepseek-tui-combined
     btop
     fish
+    speedtest-cli
   ];
 
   # Session
+  home.sessionPath = [
+    "$HOME/.nix-profile/bin"
+    "/nix/var/nix/profiles/default/bin"
+  ];
+
   home.sessionVariables = {
     EDITOR = "nvim";
     DEEPSEEK_TUI_BIN = "${deepseek-tui}/bin/deepseek-tui";
@@ -96,7 +102,6 @@ in
   xdg.configFile = {
     "fastfetch/config.jsonc".source = ./fastfetch/config.jsonc;
     "fastfetch/logo.txt".source = ./fastfetch/logo.txt;
-    "nvim/init.lua".source = ./nvim/init.lua;
     "rmpc/themes/theme.ron".source = ./rmpc/theme.ron;
     "starship.toml".source = ./starship/starship.toml;
   };
@@ -107,45 +112,9 @@ in
     ".deepseek/skills/skill-creator/SKILL.md".source = ./deepseek/skills/skill-creator/SKILL.md;
   };
 
-  home.activation.codexChromeDevtoolsMcp = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    CODex_CONFIG="$HOME/.codex/config.toml"
-    mkdir -p "$HOME/.codex"
-
-    if [ -f "$CODex_CONFIG" ]; then
-      if grep -q '^\[mcp_servers\.chrome-devtools\]$' "$CODex_CONFIG"; then
-        ${pkgs.gawk}/bin/awk '
-          BEGIN { skip = 0 }
-          /^\[mcp_servers\.chrome-devtools\]$/ { skip = 1; next }
-          /^\[/ && skip { skip = 0 }
-          !skip { print }
-        ' "$CODex_CONFIG" > "$CODex_CONFIG.tmp"
-        mv "$CODex_CONFIG.tmp" "$CODex_CONFIG"
-      fi
-    fi
-
-    cat >> "$CODex_CONFIG" <<'EOF'
-
-[mcp_servers.chrome-devtools]
-command = "bunx"
-args = [
-  "chrome-devtools-mcp@latest",
-  "--executablePath",
-  "/home/wanmixc/.nix-profile/bin/microsoft-edge",
-]
-EOF
-  '';
-
-  home.activation.codexCommitMessageSkill = lib.hm.dag.entryAfter ["linkGeneration"] ''
-    install -Dm644 ${./codex/skills/commit-message-id/SKILL.md} \
-      "$HOME/.codex/skills/commit-message-id/SKILL.md"
-    install -Dm644 ${./codex/skills/commit-message-id/agents/openai.yaml} \
-      "$HOME/.codex/skills/commit-message-id/agents/openai.yaml"
-  '';
-
   # Programs
   programs = {
     home-manager.enable = true;
-    vim.enable = true;
 
     starship = {
       enable = true;
@@ -162,12 +131,29 @@ EOF
       nix-direnv.enable = true;
     };
 
+    delta = {
+      enable = true;
+      enableGitIntegration = true;
+      options = {
+        line-numbers = true;
+        side-by-side = true;
+        navigate = true;
+      };
+    };
+
     fish = {
        enable = true;
 
         shellInit = ''
-          fish_add_path ~/.nix-profile/bin
-        '';
+          fish_add_path --path /nix/var/nix/profiles/default/bin
+          if set -q SSH_CONNECTION
+          if test "$TERM" = "xterm-kitty"
+            if not infocmp xterm-kitty >/dev/null 2>&1
+              set -gx TERM xterm-256color
+            end
+          end
+        end
+      '';
 
         interactiveShellInit = ''
           # No greeting
@@ -200,14 +186,6 @@ EOF
     git = {
       enable = true;
       package = pkgs.git;
-      delta.enable = true;
-      delta.options = {
-        line-numbers = true;
-        side-by-side = true;
-        navigate = true;
-      };
-      userEmail = "wanmixc@gmail.com"; # FIXME: set your git email
-      userName = "wanmixc"; #FIXME: set your git username
       extraConfig = {
         # FIXME: uncomment the next lines if you want to be able to clone private https repos
         url = {
@@ -227,6 +205,10 @@ EOF
         };
         diff = {
           colorMoved = "default";
+        };
+        user = {
+          email = "wanmixc@gmail.com";
+          name = "wanmixc";
         };
       };
     };
