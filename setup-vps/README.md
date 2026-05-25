@@ -1,292 +1,132 @@
-# Setup VPS Arch Linux
+# Arch Linux Setup with Nix + Home Manager
 
-Panduan singkat setup awal VPS Arch Linux menggunakan script:
+This guide sets up a new Arch Linux user, installs Nix using the official installer, enables flakes, installs Home Manager 25.11, and applies the Home Manager configuration.
 
-- `first-run.sh`
-- `second-run.sh`
-- `secrets-setup.json`
+## 1. Install required packages
 
-Script diambil langsung dari repository:
+Run as `root`:
+
+```bash
+pacman -Syu
+pacman -S vim git curl
+```
+
+## 2. Create new user
+
+Run as `root`:
+
+```bash
+useradd -m -G wheel -s /bin/bash wanmixc
+passwd wanmixc
+```
+
+## 3. Enable sudo for wheel group
+
+Run as `root`:
+
+```bash
+EDITOR=vim visudo -f /etc/sudoers
+```
+
+Find this line:
 
 ```text
-https://github.com/Wanmixc/home-manager-linux
+# %wheel ALL=(ALL:ALL) ALL
 ```
 
----
+Uncomment it, or add this line:
 
-## 1. Login ke VPS
+```text
+%wheel ALL=(ALL:ALL) ALL
+```
 
-Login pertama kali ke VPS sebagai `root`:
+## 4. Install Nix
+
+Run as user `wanmixc`, not as root:
 
 ```bash
-ssh root@IP_VPS
+curl -L https://nixos.org/nix/install | sh -s -- --daemon
 ```
 
-Contoh:
+After installation, log out and log in again.
+
+## 5. Enable Nix flakes
+
+Edit Nix config:
 
 ```bash
-ssh root@103.190.0.119
+sudo vim /etc/nix/nix.conf
 ```
 
----
+Add this line:
 
-## 2. Masuk ke `/tmp`
+```text
+experimental-features = nix-command flakes
+```
 
-Setelah berhasil login, masuk ke folder `/tmp`:
+Restart Nix daemon:
 
 ```bash
-cd /tmp
+sudo systemctl restart nix-daemon
 ```
 
-Download file setup:
+## 6. Add Home Manager 25.11 channels
+
+Add Home Manager and Nixpkgs 25.11 channels:
 
 ```bash
-curl -LO https://raw.githubusercontent.com/Wanmixc/home-manager-linux/refs/heads/main/setup-vps/first-run.sh
-curl -LO https://raw.githubusercontent.com/Wanmixc/home-manager-linux/refs/heads/main/setup-vps/second-run.sh
-curl -LO https://raw.githubusercontent.com/Wanmixc/home-manager-linux/refs/heads/main/setup-vps/secrets-setup.example.json
+nix-channel --add https://github.com/nix-community/home-manager/archive/release-25.11.tar.gz home-manager
+nix-channel --add https://nixos.org/channels/nixos-25.11 nixpkgs
+nix-channel --update
+nix-shell '<home-manager>' -A install
 ```
+After installation, log out and log in again.
 
-Rename file example menjadi config asli:
+## 7. Clone Home Manager configuration
+
+Go to config directory:
 
 ```bash
-mv secrets-setup.example.json secrets-setup.json
+cd ~/.config
+mv home-manager home-manager.bak
+git clone https://github.com/Wanmixc/home-manager-linux.git home-manager
+cd home-manager
+git switch vps
 ```
 
-Edit file config:
+## 8. Create secrets file
+
+Create `secrets.json`:
 
 ```bash
-nano secrets-setup.json
+vim secrets.json
 ```
 
-Isi sesuai kebutuhan setup kamu.
-
-Contoh:
+Add:
 
 ```json
 {
-  "new_user": {
-    "username": "wanmixc",
-    "password": "PasswordKamuYangKuat"
-  },
-  "ntfy": {
-    "url": "https://ntfy.sh/topic-kamu"
-  }
+  "github_token": "your github token"
 }
 ```
 
-Pastikan nilai berikut sudah diganti:
+## 9. Apply Home Manager configuration
 
-```text
-__CHANGE_ME_USERNAME__
-__CHANGE_ME_PASSWORD__
-__CHANGE_ME_NTFY_URL__
-```
-
----
-
-## 3. Jalankan `first-run.sh`
-
-Beri permission execute:
+Run:
 
 ```bash
-chmod +x first-run.sh
+home-manager switch
 ```
 
-Jalankan script pertama sebagai `root`:
+## 10. Set fish as default shell
+
+Check fish path:
 
 ```bash
-./first-run.sh
+FISH_PATH="$(command -v fish)"
+grep -qxF "$FISH_PATH" /etc/shells || echo "$FISH_PATH" | sudo tee -a /etc/shells
+chsh -s "$FISH_PATH"
 ```
+Log out and log in again.
 
-Script ini akan:
-
-- Membuat user baru
-- Set password user baru
-- Menambahkan user ke grup `wheel`
-- Mengaktifkan akses sudo
-- Install basic tools
-- Membuat folder setup di home user baru:
-
-```text
-/home/<username>/Extra/setup_vps
-```
-
-- Menyalin file setup ke folder tersebut
-
----
-
-## 4. Tes login SSH dengan user baru
-
-Setelah `first-run.sh` selesai, buka terminal baru dari komputer lokal.
-
-Tes login ke VPS menggunakan user baru:
-
-```bash
-ssh <username>@IP_VPS
-```
-
-Contoh:
-
-```bash
-ssh wanmixc@103.190.0.119
-```
-
-Jika VPS menggunakan NAT/port forwarding dari provider, gunakan port yang diberikan provider:
-
-```bash
-ssh -p PORT_PROVIDER <username>@IP_VPS
-```
-
-Contoh:
-
-```bash
-ssh -p 9898 wanmixc@103.190.0.119
-```
-
-Jika login berhasil, lanjut ke tahap berikutnya.
-
----
-
-## 5. Masuk ke folder setup VPS
-
-Setelah login sebagai user baru:
-
-```bash
-cd ~/Extra/setup_vps
-```
-
-Atau path lengkap:
-
-```bash
-cd /home/<username>/Extra/setup_vps
-```
-
-Contoh:
-
-```bash
-cd /home/wanmixc/Extra/setup_vps
-```
-
----
-
-## 6. Jalankan `second-run.sh`
-
-Beri permission execute:
-
-```bash
-sudo chmod +x second-run.sh
-```
-
-Jalankan script kedua:
-
-```bash
-./second-run.sh
-```
-
-## 6. Selesai
-
-Setelah script selesai, logout lalu login ulang agar grup baru seperti `docker` dan `nix-users` aktif.
-
-```bash
-exit
-```
-
-Login ulang:
-
-```bash
-ssh <username>@IP_VPS
-```
-
-Cek sudo:
-
-```bash
-sudo whoami
-```
-
-Output yang benar:
-
-```text
-root
-```
-
-Cek Docker:
-
-```bash
-docker ps
-```
-
-Cek Nix:
-
-```bash
-nix --version
-```
-
-Cek Home Manager:
-
-```bash
-home-manager --version
-```
-
----
-
-## Catatan Penting
-
-Jangan upload atau commit file ini ke repository publik:
-
-```text
-secrets-setup.json
-```
-
-Karena berisi:
-
-- Username
-- Password
-- Link ntfy pribadi
-
-Yang boleh masuk repository publik hanya:
-
-```text
-secrets-setup.example.json
-```
-
----
-
-## Ringkasan Command
-
-```bash
-ssh root@IP_VPS
-
-cd /tmp
-
-curl -LO https://raw.githubusercontent.com/Wanmixc/home-manager-linux/refs/heads/main/setup-vps/first-run.sh
-curl -LO https://raw.githubusercontent.com/Wanmixc/home-manager-linux/refs/heads/main/setup-vps/second-run.sh
-curl -LO https://raw.githubusercontent.com/Wanmixc/home-manager-linux/refs/heads/main/setup-vps/secrets-setup.example.json
-
-mv secrets-setup.example.json secrets-setup.json
-nano secrets-setup.json
-
-chmod +x first-run.sh
-./first-run.sh
-```
-
-Setelah itu test login user baru dari terminal lokal:
-
-```bash
-ssh <username>@IP_VPS
-```
-
-Lalu di user baru:
-
-```bash
-cd ~/Extra/setup_vps
-sudo chmod +x second-run.sh
-./second-run.sh
-```
-
-Delete Folder /setup_vps
-
-```bash
-cd ..
-rm -rf setup_vps
-```
 Done.
