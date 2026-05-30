@@ -11,15 +11,11 @@ let
   deepseek-cli = pkgs.rustPlatform.buildRustPackage {
     pname = "deepseek-tui-cli";
     version = "0.8.44";
-
     src = deepseek-tui-src;
     cargoLock.lockFile = "${deepseek-tui-src}/Cargo.lock";
-
     cargoHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
-
     nativeBuildInputs = [ pkgs.pkg-config ];
     buildInputs = [ pkgs.dbus ];
-
     buildAndTestSubdir = "crates/cli";
     doCheck = false;
   };
@@ -27,18 +23,15 @@ let
   deepseek-tui = pkgs.rustPlatform.buildRustPackage {
     pname = "deepseek-tui";
     version = "0.8.44";
-
     src = deepseek-tui-src;
     cargoLock.lockFile = "${deepseek-tui-src}/Cargo.lock";
-
     cargoHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
-
     nativeBuildInputs = [ pkgs.pkg-config ];
     buildInputs = [ pkgs.dbus ];
-
     buildAndTestSubdir = "crates/tui";
     doCheck = false;
   };
+
   deepseek-tui-combined = pkgs.symlinkJoin {
     name = "deepseek-tui-combined-0.8.44";
     paths = [
@@ -68,6 +61,37 @@ let
     fi
 
     exec "$HERMES_VENV/bin/hermes" "$@"
+  '';
+
+  honcho-repo = pkgs.fetchFromGitHub {
+    owner = "plastic-labs";
+    repo = "honcho";
+    rev = "v3.0.7";
+    hash = "sha256-1izjh0wqz4fh61ig033sdgwzc31z4h0vl41035i36fw25a0rkyw3=";
+  };
+
+  honcho-setup = pkgs.writeShellScriptBin "honcho-setup" ''
+    HONCHO_DIR="$HOME/.local/share/honcho"
+    HONCHO_ENV="$HONCHO_DIR/.env"
+
+    if [ ! -d "$HONCHO_DIR" ]; then
+      echo "⚡ Cloning Honcho..."
+      cp -r "${honcho-repo}" "$HONCHO_DIR"
+      chmod -R u+w "$HONCHO_DIR"
+      cp "$HONCHO_DIR/docker-compose.yml.example" "$HONCHO_DIR/docker-compose.yml"
+    fi
+
+    # Write .env from secrets (read at runtime, not bake into store)
+    cat > "$HONCHO_ENV" << ENVEOF
+LOG_LEVEL=INFO
+DB_CONNECTION_URI=postgresql+psycopg://postgres:postgres@localhost:5432/postgres
+AUTH_USE_AUTH=false
+LLM_OPENAI_API_KEY=$(python3 -c "import json; print(json.load(open('$HOME/.config/home-manager/secrets.json')).get('honcho_llm_api_key', ''))")
+ENVEOF
+
+    cd "$HONCHO_DIR"
+    docker compose up -d --build
+    echo "✓ Honcho started at http://localhost:8000"
   '';
 
 in
@@ -114,6 +138,7 @@ in
     nodejs
     nmap
     tailscale
+    docker-compose
   ];
 
   # Session
@@ -144,6 +169,39 @@ in
   home.file = {
     ".deepseek/skills/commit-message-id/SKILL.md".source = ./deepseek/skills/commit-message-id/SKILL.md;
     ".deepseek/skills/skill-creator/SKILL.md".source = ./deepseek/skills/skill-creator/SKILL.md;
+    # Hermes → Honcho connection config
+    ".hermes/honcho.json" = {
+      text = builtins.toJSON {
+        baseUrl = "http://localhost:8000";
+        hosts = {
+          hermes = {
+            enabled = true;
+            aiPeer = "hermes";
+            peerName = "WanMixc";
+            workspace = "hermes";
+          };
+        };
+      };
+    };
+  };
+
+  # Honcho auto-start via systemd user service
+  systemd.user.services.honcho = {
+    Unit = {
+      Description = "Honcho memory server (Docker compose)";
+      After = [ "network-online.target" "docker.service" ];
+      Wants = [ "docker.service" ];
+    };
+    Service = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = "${honcho-setup}/bin/honcho-setup";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose -f $HOME/.local/share/honcho/docker-compose.yml down";
+      Restart = "no";
+    };
+    Install = {
+      WantedBy = [ "default.target" ];
+    };
   };
 
   programs.home-manager.enable = true;
