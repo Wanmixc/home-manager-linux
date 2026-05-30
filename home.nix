@@ -56,6 +56,8 @@ let
       cp "$WHEEL" "$TMP_WHEEL"
       ${pkgs.uv}/bin/uv venv "$HERMES_VENV" --python 3.11
       ${pkgs.uv}/bin/uv pip install --python "$HERMES_VENV/bin/python" "$TMP_WHEEL"
+      # Patch: skip pgvector extension (not needed with LanceDB)
+      sed -i "s/CREATE EXTENSION IF NOT EXISTS vector/-- CREATE EXTENSION IF NOT EXISTS vector/" "$HONCHO_DIR/src/db.py"
       rm -f "$TMP_WHEEL"
       echo "✓ Hermes Agent ready."
     fi
@@ -70,33 +72,70 @@ let
     hash = "sha256-1izjh0wqz4fh61ig033sdgwzc31z4h0vl41035i36fw25a0rkyw3=";
   };
 
-  honcho-setup = pkgs.writeShellScriptBin "honcho-setup" ''
-    HONCHO_DIR="$HOME/.local/share/honcho"
+  honcho-data = "$HOME/.local/share/honcho";
+  honcho-venv = "$HOME/.local/share/honcho-venv";
+  pgdata = "$HOME/.local/share/honcho-pgdata";
+
+  honcho-server = pkgs.writeShellScriptBin "honcho-server" ''
+    set -e
+    HONCHO_DIR="${honcho-data}"
+    HONCHO_VENV="${honcho-venv}"
+    PGDATA="${pgdata}"
+    PGHOST="$PGDATA"
+    PGLOG="$PGDATA/postgres.log"
     HONCHO_ENV="$HONCHO_DIR/.env"
 
-    if [ ! -d "$HONCHO_DIR" ]; then
-      echo "⚡ Cloning Honcho..."
+    # ── Bootstrap: source + venv ─────────────────────────────────
+    if [ ! -d "$HONCHO_DIR/src" ]; then
+      echo "⚡ Setting up Honcho..."
+      rm -rf "$HONCHO_DIR" "$HONCHO_VENV" "$PGDATA"
       cp -r "${honcho-repo}" "$HONCHO_DIR"
       chmod -R u+w "$HONCHO_DIR"
-      cp "$HONCHO_DIR/docker-compose.yml.example" "$HONCHO_DIR/docker-compose.yml"
+      ${pkgs.uv}/bin/uv venv "$HONCHO_VENV" --python 3.11
+      ${pkgs.uv}/bin/uv pip install --python "$HONCHO_VENV/bin/python" \
+        "$HONCHO_DIR" "uvicorn[standard]"
+      # Patch: skip pgvector extension (not needed with LanceDB)
+      sed -i "s/CREATE EXTENSION IF NOT EXISTS vector/-- CREATE EXTENSION IF NOT EXISTS vector/" "$HONCHO_DIR/src/db.py"
+
+      # Init PostgreSQL data dir
+      ${pkgs.postgresql}/bin/initdb -D "$PGDATA" --username=postgres --auth=trust --no-locale
+      echo "unix_socket_directories = '''$PGDATA'''" >> "$PGDATA/postgresql.conf"
+      echo "listen_addresses = ''''" >> "$PGDATA/postgresql.conf"
+      echo "✓ Honcho ready."
     fi
 
-    # Write .env from secrets (read at runtime, not bake into store)
+    # ── Start PostgreSQL ─────────────────────────────────────────
+    if ! ${pkgs.postgresql}/bin/pg_isready -h "$PGDATA" -q 2>/dev/null; then
+      ${pkgs.postgresql}/bin/pg_ctl -D "$PGDATA" -l "$PGLOG" start -w -t 10
+      # Create DB + enable pgvector on first start
+      ${pkgs.postgresql}/bin/createdb -h "$PGDATA" -U postgres honcho 2>/dev/null || true
+    fi
+
+    # Resolve LLM API key
+    LLM_KEY=$(python3 -c "import json; print(json.load(open('$HOME/.config/home-manager/secrets.json')).get('honcho_llm_api_key', ''))")
+
+    # Write .env
     cat > "$HONCHO_ENV" << ENVEOF
 LOG_LEVEL=INFO
-DB_CONNECTION_URI=postgresql+psycopg://postgres:postgres@localhost:5432/postgres
+DB_CONNECTION_URI=postgresql+psycopg://postgres:postgres@/honcho?host=$PGDATA
 AUTH_USE_AUTH=false
-LLM_OPENAI_API_KEY=$(python3 -c "import json; print(json.load(open('$HOME/.config/home-manager/secrets.json')).get('honcho_llm_api_key', ''))")
+VECTOR_STORE_TYPE=lancedb
+VECTOR_STORE_LANCEDB_PATH=$HONCHO_DIR/lancedb_data
+CACHE_ENABLED=false
+LLM_OPENAI_API_KEY=$LLM_KEY
 ENVEOF
 
     cd "$HONCHO_DIR"
-    docker compose up -d --build
-    echo "✓ Honcho started at http://localhost:8000"
+    export HONCHO_VERSION=3.0.7
+
+    # Run migrations
+    "$HONCHO_VENV/bin/python" scripts/provision_db.py 2>&1 | grep -v "^INFO"
+
+    exec "$HONCHO_VENV/bin/fastapi" run --host 127.0.0.1 --port 8000 src/main.py
   '';
 
 in
 {
-  # Modules
   imports = [
     ./tmux/tmux.nix
     (import ./nvim/default.nix)
@@ -107,15 +146,12 @@ in
     (import ./services/mpd.nix)
   ];
 
-  # Nixpkgs
   nixpkgs.config.allowUnfree = true;
 
-  # Home metadata
   home.username = "wanmixc";
   home.homeDirectory = "/home/wanmixc";
   home.stateVersion = "25.11";
 
-  # Packages
   home.packages = with pkgs; [
     bash-language-server
     bat
@@ -138,10 +174,9 @@ in
     nodejs
     nmap
     tailscale
-    docker-compose
+    postgresql
   ];
 
-  # Session
   home.sessionPath = [
     "$HOME/.nix-profile/bin"
     "/nix/var/nix/profiles/default/bin"
@@ -152,7 +187,6 @@ in
     DEEPSEEK_TUI_BIN = "${deepseek-tui}/bin/deepseek-tui";
   };
 
-  # XDG
   xdg.userDirs = {
     enable = true;
     createDirectories = true;
@@ -165,11 +199,9 @@ in
     "starship.toml".source = ./starship/starship.toml;
   };
 
-  # DeepSeek skills managed declaratively via Home Manager
   home.file = {
     ".deepseek/skills/commit-message-id/SKILL.md".source = ./deepseek/skills/commit-message-id/SKILL.md;
     ".deepseek/skills/skill-creator/SKILL.md".source = ./deepseek/skills/skill-creator/SKILL.md;
-    # Hermes → Honcho connection config
     ".hermes/honcho.json" = {
       text = builtins.toJSON {
         baseUrl = "http://localhost:8000";
@@ -185,19 +217,18 @@ in
     };
   };
 
-  # Honcho auto-start via systemd user service
   systemd.user.services.honcho = {
     Unit = {
-      Description = "Honcho memory server (Docker compose)";
-      After = [ "network-online.target" "docker.service" ];
-      Wants = [ "docker.service" ];
+      Description = "Honcho memory server (native PostgreSQL + LanceDB)";
+      After = [ "network-online.target" ];
     };
     Service = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      ExecStart = "${honcho-setup}/bin/honcho-setup";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose -f $HOME/.local/share/honcho/docker-compose.yml down";
-      Restart = "no";
+      Type = "simple";
+      ExecStart = "${honcho-server}/bin/honcho-server";
+      Restart = "on-failure";
+      RestartSec = "5";
+      TimeoutStopSec = "30";
+      ExecStop = "${pkgs.postgresql}/bin/pg_ctl -D ${pgdata} stop";
     };
     Install = {
       WantedBy = [ "default.target" ];
