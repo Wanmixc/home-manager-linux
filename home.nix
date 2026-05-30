@@ -47,6 +47,29 @@ let
    ];
   };
 
+  hermes-wheel = pkgs.fetchurl {
+    url = "https://github.com/NousResearch/hermes-agent/releases/download/v2026.5.29.2/hermes_agent-0.15.2-py3-none-any.whl";
+    hash = "sha256-FISwv2bSacjZAzZQm0GpwQQfx+YSTxON9xwkipVc3Ds=";
+  };
+
+  hermes-agent = pkgs.writeShellScriptBin "hermes" ''
+    HERMES_VENV="$HOME/.local/share/hermes-agent"
+    WHEEL="${hermes-wheel}"
+
+    if [ ! -x "$HERMES_VENV/bin/hermes" ]; then
+      echo "⚡ Bootstrapping Hermes Agent..."
+      rm -rf "$HERMES_VENV"
+      TMP_WHEEL="/tmp/hermes_agent-0.15.2-py3-none-any.whl"
+      cp "$WHEEL" "$TMP_WHEEL"
+      ${pkgs.uv}/bin/uv venv "$HERMES_VENV" --python 3.11
+      ${pkgs.uv}/bin/uv pip install --python "$HERMES_VENV/bin/python" "$TMP_WHEEL"
+      rm -f "$TMP_WHEEL"
+      echo "✓ Hermes Agent ready."
+    fi
+
+    exec "$HERMES_VENV/bin/hermes" "$@"
+  '';
+
 in
 {
   # Modules
@@ -83,9 +106,14 @@ in
     unzip
     fzf
     deepseek-tui-combined
+    hermes-agent
+    uv
     btop
     fish
     speedtest-cli
+    nodejs
+    nmap
+    tailscale
   ];
 
   # Session
