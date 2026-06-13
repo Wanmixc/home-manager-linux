@@ -1,0 +1,4 @@
+{ ... }:
+{
+  imports = [ ../tmux/tmux.nix ];
+}

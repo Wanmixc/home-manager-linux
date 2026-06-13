@@ -1,86 +1,124 @@
-# Home Manager Linux
+# Home Manager
 
-Personal [Home Manager](https://nix-community.github.io/home-manager/) configuration for Linux, managed with [Nix](https://nixos.org/).
+Personal multi-machine [Home Manager](https://nix-community.github.io/home-manager/) configuration for:
 
-This repository declaratively defines the user environment — installed packages, dotfiles, shell settings, and program configurations — so everything can be reproduced on any Linux machine with Nix.
+- `cachyos-nix`
+- `wsl`
+- `vps`
 
-> [!IMPORTANT]
-> Before running `home-manager switch`, create a `secrets.json` file in the repository root:
->
-> ```json
-> {
->   "github_token": "your github token"
-> }
-> ```
+This repository now uses a flat `programs/` layout so each app or concern is defined in one `.nix` file.
 
-## What's Included
+## Host Targets
 
-| Category | Details |
-|---|---|
-| **Editor** | Neovim (custom `nvim/init.lua`), Vim |
-| **Shell & Terminal** | Tmux, Zoxide, Direnv, Bash Language Server, ShFmt |
-| **Music** | MPD user service + `rmpc` terminal client (`rmpc/config.ron`) |
-| **File Manager** | Yazi (with Neovim integration and Fish shell support) |
-| **Git** | Git with [delta](https://github.com/dandavison/delta) (side-by-side diffs), GitUI |
-| **Search & Utilities** | Ripgrep, Bat, Eza, Unzip, Fastfetch |
-| **AI Tools** | [Codex CLI](https://github.com/openai/codex) |
-| **Browser** | Microsoft Edge |
-| **Runtime** | Bun |
+Available Home Manager flake targets:
+
+- `wanmixc-cachyos-nix`
+- `wanmixc-wsl`
+- `wanmixc-vps`
+
+## Rules
+
+AI tool policy:
+
+- `cachyos-nix` -> `codex`
+- `wsl` -> `codex`
+- `vps` -> `deepseek`
+
+Neovim policy:
+
+- one shared Neovim config
+- source of truth is the `programs/nvim/` folder in this repo
 
 ## Repository Structure
 
 ```text
 .
-├── home.nix              # Main Home Manager configuration and module imports
-├── fastfetch/
-│   └── config.jsonc      # Fastfetch system info display config
-├── nvim/
-│   └── init.lua          # Neovim configuration
-├── rmpc/
-│   └── config.ron        # rmpc layout, keybinds, and MPD client config
-├── codex/
-│   └── skills/           # Codex skills managed by Home Manager
+├── flake.nix
+├── home.nix
+├── hosts/
+│   ├── cachyos-nix.nix
+│   ├── wsl.nix
+│   └── vps.nix
+├── programs/
+│   ├── base.nix
+│   ├── env.nix
+│   ├── git.nix
+│   ├── fish.nix
+│   ├── xdg.nix
+│   ├── devtools.nix
+│   ├── desktop.nix
+│   ├── codex.nix
+│   ├── deepseek.nix
+│   ├── nvim.nix
+│   ├── tmux.nix
+│   ├── yazi.nix
+│   ├── fastfetch.nix
+│   ├── rmpc.nix
+│   ├── mpd.nix
+│   └── nvim/
 ├── tmux/
-│   └── tmux.nix          # Tmux Home Manager module
-├── secrets.json          # (git-ignored) GitHub token
-└── README.md
+├── fastfetch/
+├── rmpc/
+├── codex/
+├── deepseek/
+└── secrets.json
 ```
 
-## Getting Started
+## Secrets
 
-### Prerequisites
+`secrets.json` is optional.
 
-- [Nix](https://nixos.org/download/) package manager
-- [Home Manager](https://nix-community.github.io/home-manager/) installed as a standalone tool or NixOS module
+If present, it may contain:
 
-### Setup
+```json
+{
+  "github_token": "your github token"
+}
+```
 
-1. Clone this repository:
+If the file is absent, the configuration still evaluates successfully.
 
-   ```bash
-   git clone https://github.com/Wanmixc/home-manager-linux.git ~/.config/home-manager
-   ```
+## Usage
 
-2. Create a `secrets.json` file in the repository root with your tokens:
+Clone the repository wherever you want, for example:
 
-   ```json
-   {
-     "github_token": "your github token"
-   }
-   ```
+```bash
+git clone https://github.com/Wanmixc/home-manager-linux.git ~/.config/home-manager
+cd ~/.config/home-manager
+```
 
-3. Apply the configuration:
+Apply a target with Home Manager:
 
-   ```bash
-   home-manager switch
-   ```
+```bash
+home-manager switch --flake .#wanmixc-cachyos-nix
+home-manager switch --flake .#wanmixc-wsl
+home-manager switch --flake .#wanmixc-vps
+```
 
-## Key Configuration Highlights
+If local files already exist and need backup:
 
-- **Git** — Configured with `delta` for side-by-side diffs, automatic remote setup on push, and private repo access via tokens from `secrets.json`.
-- **Yazi** — Opens text files in Neovim by default; hidden files are shown.
-- **Direnv** — Enabled for per-directory environment management.
-- **rmpc + MPD** — MPD runs as a Home Manager user service with socket activation, and `rmpc` is configured from `rmpc/config.ron` with a custom multi-pane layout.
-- **Tmux** — Modularized into `tmux/tmux.nix` with quick split bindings, `Alt-h/j/k/l` pane navigation, and a status bar styled to match the local terminal palette.
-- **Codex CLI** — Packaged as a custom Nix overlay fetched from the official GitHub release.
-- **Codex Skills** — Installs the `commit-message-id` skill into `~/.codex/skills` via Home Manager activation so Codex can use the Indonesian commit message guideline.
+```bash
+home-manager switch -b backup --flake .#wanmixc-cachyos-nix
+```
+
+## Compatibility Wrapper
+
+`home.nix` remains as a thin compatibility wrapper.
+
+Current behavior:
+
+- auto-selects `wsl` when WSL is detected
+- auto-selects `cachyos-nix` on host `Wan-PC`
+- requires explicit `--flake` selection for unsupported non-flake hosts such as VPS
+
+For VPS, prefer:
+
+```bash
+home-manager switch --flake .#wanmixc-vps
+```
+
+## Notes
+
+- `tmux/tmux.nix` is preserved and imported through [programs/tmux.nix](/home/wanmixc/.config/home-manager/programs/tmux.nix).
+- Desktop-only integrations such as Edge and Codex Chrome DevTools MCP are only enabled on the desktop host.
+- DeepSeek is currently packaged through a binary release flow in [programs/deepseek.nix](/home/wanmixc/.config/home-manager/programs/deepseek.nix).
