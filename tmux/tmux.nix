@@ -25,6 +25,8 @@
       bind c new-window -c "#{pane_current_path}"
 
       bind r source-file ~/.config/tmux/tmux.conf \; display-message "tmux config reloaded"
+      bind -T copy-mode-vi v send-keys -X begin-selection
+      bind -T copy-mode-vi y send-keys -X copy-selection-and-cancel
 
       bind h select-pane -L
       bind j select-pane -D
