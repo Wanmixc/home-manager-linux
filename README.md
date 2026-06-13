@@ -55,12 +55,12 @@ Neovim policy:
 │   ├── fastfetch.nix
 │   ├── rmpc.nix
 │   ├── mpd.nix
-│   └── nvim/
-├── tmux/
-├── fastfetch/
-├── rmpc/
-├── codex/
-├── deepseek/
+│   ├── nvim/
+│   ├── tmux/
+│   ├── fastfetch/
+│   ├── rmpc/
+│   ├── codex/
+│   └── deepseek/
 └── secrets.json
 ```
 
@@ -119,6 +119,6 @@ home-manager switch --flake .#wanmixc-vps
 
 ## Notes
 
-- `tmux/tmux.nix` is preserved and imported through [programs/tmux.nix](/home/wanmixc/.config/home-manager/programs/tmux.nix).
+- `programs/tmux/tmux.nix` is preserved and imported through [programs/tmux.nix](/home/wanmixc/.config/home-manager/programs/tmux.nix).
 - Desktop-only integrations such as Edge and Codex Chrome DevTools MCP are only enabled on the desktop host.
 - DeepSeek is currently packaged through a binary release flow in [programs/deepseek.nix](/home/wanmixc/.config/home-manager/programs/deepseek.nix).
