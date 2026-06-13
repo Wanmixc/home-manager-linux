@@ -44,6 +44,7 @@ Neovim policy:
 │   ├── env.nix
 │   ├── git.nix
 │   ├── fish.nix
+│   ├── starship.nix
 │   ├── xdg.nix
 │   ├── devtools.nix
 │   ├── desktop.nix
@@ -56,6 +57,7 @@ Neovim policy:
 │   ├── rmpc.nix
 │   ├── mpd.nix
 │   ├── nvim/
+│   ├── starship/
 │   ├── tmux/
 │   ├── fastfetch/
 │   ├── rmpc/

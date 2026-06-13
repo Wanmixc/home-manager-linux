@@ -4,6 +4,7 @@
     ../programs/env.nix
     ../programs/git.nix
     ../programs/fish.nix
+    ../programs/starship.nix
     ../programs/xdg.nix
     ../programs/devtools.nix
     ../programs/codex.nix
