@@ -8,6 +8,7 @@
     shfmt
     unzip
     zoxide
+    atac
   ];
 
   programs.direnv.enable = true;
