@@ -9,6 +9,7 @@
     unzip
     zoxide
     atac
+    bubblewrap
   ];
 
   programs.direnv.enable = true;
