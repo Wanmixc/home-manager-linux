@@ -10,11 +10,6 @@
       set fish_cursor_visual block
 
       fish_vi_key_bindings
-      bind -M insert -m default jj repaint-mode
-      bind -M default -m insert i repaint-mode
-      bind -M insert ctrl-r history-pager
-      bind -M default ctrl-r history-pager
-
       set fish_greeting
 
       starship init fish | source
@@ -43,6 +38,17 @@
     };
 
     functions = {
+      fish_user_key_bindings = {
+        body = ''
+          bind -M insert -m default jj repaint-mode
+          bind -M default -m insert i repaint-mode
+          bind -M insert \cr history-pager
+          bind -M default \cr history-pager
+          bind -M insert \ct __wanmixc_fzf_ctrl_t
+          bind -M default \ct __wanmixc_fzf_ctrl_t
+        '';
+      };
+
       fish_mode_prompt = {
         body = ''
           switch $fish_bind_mode
@@ -79,6 +85,22 @@
             cd -- "$cwd"
           end
           rm -f -- "$tmp"
+        '';
+      };
+
+      __wanmixc_fzf_ctrl_t = {
+        body = ''
+          set -l selection (command find -L . \
+            -path '*/.git' -prune -o \
+            -path '*/node_modules' -prune -o \
+            -path '*/.direnv' -prune -o \
+            -type f -print -o -type d -print | sed 's#^\./##' | fzf)
+
+          if test -n "$selection"
+            commandline -i -- (string escape -- $selection)
+          end
+
+          commandline -f repaint
         '';
       };
     };

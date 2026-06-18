@@ -10,6 +10,7 @@
     zoxide
     atac
     bubblewrap
+    fzf
   ];
 
   programs.direnv.enable = true;

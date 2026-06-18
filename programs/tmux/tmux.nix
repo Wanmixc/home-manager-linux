@@ -36,6 +36,7 @@
       bind -n M-j select-pane -D
       bind -n M-k select-pane -U
       bind -n M-l select-pane -R
+      bind -n C-t send-keys C-t
 
       bind -r H resize-pane -L 5
       bind -r J resize-pane -D 5
