@@ -31,6 +31,30 @@ let
       chmod +x $out/bin/codex
     '';
   };
+
+  codexPluginsMarketplace = builtins.toFile "codex-marketplace.json" ''
+    {
+      "name": "wanmixc-local",
+      "interface": {
+        "displayName": "Wanmixc Local"
+      },
+      "plugins": [
+        {
+          "name": "brainstorming",
+          "source": {
+            "source": "local",
+            "path": "./plugins/brainstorming"
+          },
+          "policy": {
+            "installation": "AVAILABLE",
+            "authentication": "ON_INSTALL",
+            "products": ["CODEX"]
+          },
+          "category": "Productivity"
+        }
+      ]
+    }
+  '';
 in
 {
   home.packages = with pkgs; [
@@ -40,10 +64,22 @@ in
     gitui
   ];
 
-  home.activation.codexCommitMessageSkill = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
-    install -Dm644 ${./codex/skills/commit-message-id/SKILL.md} \
-      "$HOME/.codex/skills/commit-message-id/SKILL.md"
-    install -Dm644 ${./codex/skills/commit-message-id/agents/openai.yaml} \
-      "$HOME/.codex/skills/commit-message-id/agents/openai.yaml"
+  home.activation.codexSkills = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+    while IFS= read -r src; do
+      rel="''${src#${./codex/skills}/}"
+      install -Dm644 "$src" "$HOME/.codex/skills/$rel"
+    done < <(find ${./codex/skills} -type f)
+
+    rm -rf "$HOME/.codex/skills/brainstorming"
+  '';
+
+  home.activation.codexPlugins = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+    while IFS= read -r src; do
+      rel="''${src#${./codex/plugins}/}"
+      install -Dm644 "$src" "$HOME/plugins/$rel"
+    done < <(find ${./codex/plugins} -type f)
+
+    install -Dm644 ${codexPluginsMarketplace} "$HOME/.agents/plugins/marketplace.json"
+    install -Dm644 ${codexPluginsMarketplace} "$HOME/.agents/plugins/api_marketplace.json"
   '';
 }
