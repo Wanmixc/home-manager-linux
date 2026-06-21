@@ -11,6 +11,7 @@
     atac
     bubblewrap
     fzf
+    speedtest-cli
   ];
 
   programs.direnv.enable = true;
