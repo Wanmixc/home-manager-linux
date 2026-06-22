@@ -1,12 +1,4 @@
-{ pkgs, lib, ... }:
-let
-  secretsPath = /home/wanmixc/configuration/secrets.json;
-  secrets =
-    if builtins.pathExists secretsPath
-    then builtins.fromJSON (builtins.readFile secretsPath)
-    else { };
-  githubToken = secrets.github_token or "";
-in
+{ pkgs, ... }:
 {
   home.packages = [
     pkgs.git
@@ -26,13 +18,7 @@ in
       };
       merge.conflictstyle = "diff3";
       diff.colorMoved = "default";
-    }
-    // lib.optionalAttrs (githubToken != "") {
-      url."https://oauth2:${githubToken}@github.com/".insteadOf = [
-        "https://github.com/"
-        "git@github.com:"
-        "ssh://git@github.com/"
-      ];
+      credential.helper = "!$HOME/.config/runtime-env/github-credential-helper";
     };
   };
 

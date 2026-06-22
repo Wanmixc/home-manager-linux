@@ -9,11 +9,68 @@ in
 
   home.activation.supermemoryRuntimeEnv = ''
     runtime_env_dir="$HOME/.config/runtime-env"
+    github_helper="$runtime_env_dir/github-credential-helper"
     supermemory_sh="$runtime_env_dir/supermemory.sh"
     supermemory_fish="$runtime_env_dir/supermemory.fish"
     supermemory_env="$runtime_env_dir/supermemory.env"
 
     ${pkgs.coreutils}/bin/mkdir -p "$runtime_env_dir"
+
+    ${pkgs.python3}/bin/python3 - "$runtime_env_dir" "${secretsPath}" <<'PY'
+import pathlib
+import sys
+
+runtime_env_dir = pathlib.Path(sys.argv[1])
+secrets_path = sys.argv[2]
+
+helper_script = """\
+# BEGIN github-credential-helper
+#!/usr/bin/env bash
+set -euo pipefail
+
+secrets_path="''${GITHUB_SECRETS_PATH:-__SECRETS_PATH__}"
+
+request="$(${pkgs.coreutils}/bin/cat)"
+
+${pkgs.python3}/bin/python3 - "$secrets_path" "$request" <<'INNER_PY'
+import json
+import sys
+
+secrets_path = sys.argv[1]
+request = sys.argv[2]
+
+fields = {}
+for line in request.splitlines():
+    if "=" not in line:
+        continue
+    key, value = line.split("=", 1)
+    fields[key] = value
+
+if fields.get("protocol") != "https" or fields.get("host") != "github.com":
+    raise SystemExit(0)
+
+try:
+    with open(secrets_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+except FileNotFoundError:
+    raise SystemExit(0)
+except json.JSONDecodeError:
+    raise SystemExit(0)
+
+token = data.get("github_token", "")
+if not isinstance(token, str) or token == "":
+    raise SystemExit(0)
+
+print("username=oauth2")
+print(f"password={token}")
+INNER_PY
+# END github-credential-helper
+""".replace("__SECRETS_PATH__", secrets_path)
+
+(runtime_env_dir / "github-credential-helper").write_text(helper_script, encoding="utf-8")
+PY
+
+    ${pkgs.coreutils}/bin/chmod 700 "$github_helper"
 
     supermemory_codex_api_key="$(${pkgs.python3}/bin/python3 -c '
 import json
