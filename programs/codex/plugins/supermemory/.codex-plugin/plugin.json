@@ -1,0 +1,38 @@
+{
+  "name": "supermemory",
+  "version": "1.0.5",
+  "description": "Persistent memory for Codex, powered by Supermemory.",
+  "author": {
+    "name": "Supermemory",
+    "url": "https://github.com/supermemoryai/codex-supermemory"
+  },
+  "homepage": "https://github.com/supermemoryai/codex-supermemory#readme",
+  "repository": "https://github.com/supermemoryai/codex-supermemory",
+  "license": "MIT",
+  "keywords": [
+    "codex",
+    "supermemory",
+    "memory",
+    "hooks",
+    "productivity"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Supermemory",
+    "shortDescription": "Persistent memory across Codex sessions",
+    "longDescription": "Supermemory adds persistent memory to Codex using hooks for automatic recall on prompt submit and automatic save on session stop, plus explicit fallback skills for search, save, forget, and login.",
+    "developerName": "Supermemory",
+    "category": "Productivity",
+    "capabilities": ["Interactive", "Read", "Write"],
+    "websiteURL": "https://github.com/supermemoryai/codex-supermemory",
+    "privacyPolicyURL": "https://supermemory.ai/privacy",
+    "termsOfServiceURL": "https://supermemory.ai/terms",
+    "defaultPrompt": [
+      "Search what I worked on before in this repo.",
+      "Save this architectural decision to memory.",
+      "Help me re-authenticate Supermemory."
+    ],
+    "brandColor": "#2563EB",
+    "screenshots": []
+  }
+}
