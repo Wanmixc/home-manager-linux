@@ -8,6 +8,7 @@
     ../programs/xdg.nix
     ../programs/devtools.nix
     ../programs/claude-code.nix
+    ../programs/pi-coding-agent.nix
     ../programs/codex.nix
     ../programs/nvim.nix
     ../programs/tmux.nix
